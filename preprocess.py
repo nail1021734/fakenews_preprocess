@@ -42,6 +42,7 @@ def NFKC(dataset):
 
     return dataset
 
+
 def read_ner_result(NER_result_dir):
     r"""
     Load NER result.
@@ -52,13 +53,16 @@ def read_ner_result(NER_result_dir):
     article_NER_results = []
     for filename in tqdm(filenames):
         if 'title' in filename:
-            temp = json.load(open(f'{NER_result_dir}/{filename}', 'r', encoding='utf8'))
+            temp = json.load(
+                open(f'{NER_result_dir}/{filename}', 'r', encoding='utf8'))
             title_NER_results.extend(temp)
         if 'article' in filename:
-            temp = json.load(open(f'{NER_result_dir}/{filename}', 'r', encoding='utf8'))
+            temp = json.load(
+                open(f'{NER_result_dir}/{filename}', 'r', encoding='utf8'))
             article_NER_results.extend(temp)
 
     return title_NER_results, article_NER_results
+
 
 def NER_dataset(dataset, save_dir):
 
@@ -86,7 +90,8 @@ def NER_dataset(dataset, save_dir):
                     'NER_result': [{'word': enty.word, 'ner': enty.ner, 'idx': enty.idx} for enty in sentence_ner]
                 }
             )
-        json.dump(ner_result, open(f'{save_dir}/title-{index}.json', 'w', encoding='utf8'))
+        json.dump(ner_result, open(
+            f'{save_dir}/title-{index}.json', 'w', encoding='utf8'))
         index = end
 
     # NER article.
@@ -109,10 +114,9 @@ def NER_dataset(dataset, save_dir):
                     'NER_result': [{'word': enty.word, 'ner': enty.ner, 'idx': enty.idx} for enty in sentence_ner]
                 }
             )
-        json.dump(ner_result, open(f'{save_dir}/article-{index}.json', 'w', encoding='utf8'))
+        json.dump(ner_result, open(
+            f'{save_dir}/article-{index}.json', 'w', encoding='utf8'))
         index = end
-
-
 
 
 def ner_tag_subs(dataset, tag_dict, NER_result_dir):
@@ -185,7 +189,8 @@ def ner_tag_subs(dataset, tag_dict, NER_result_dir):
         # Replace some words that NER didn’t catch index but in dictionary.
         for k, v in type_table.items():
             tag_dic = word2tag_dict[v['id']]
-            tag_dic = sorted(tag_dic.items(), key=lambda x: len(x[0]), reverse=True)
+            tag_dic = sorted(
+                tag_dic.items(), key=lambda x: len(x[0]), reverse=True)
             for k, v in tag_dic:
                 rp_title = rp_title.replace(k, v)
                 rp_article = rp_article.replace(k, v)
@@ -496,6 +501,7 @@ def merge_db(input_db, save_db):
 
     return dataset
 
+
 def base_preprocess(db_name, save_db_name):
     # Not replace word to tag.
     dataset = load_database(db_name)
@@ -509,20 +515,22 @@ def base_preprocess(db_name, save_db_name):
     dataset = length_filter(dataset, 200, 1000)
     save_in_db(save_db_name, dataset)
 
+
 def main():
-    dataset = load_database('temp_v2.3.db')[:10]
+    dataset = load_database('temp_v2.3.db')
+
     # Not replace word to tag.
     # dataset = NFKC(dataset)
     # dataset = url_filter(dataset)
     # dataset = whitespace_filter(dataset)
-    # dataset = length_filter(dataset, 200, 1000)
+    # dataset = length_filter(dataset, min_bound=200, max_bound=1000)
     # dataset = parentheses_filter(dataset)
     # dataset = emoji_filter(dataset)
     # dataset = not_CJK_filter(dataset)
-    # dataset = length_filter(dataset, 200, 1000)
+    # dataset = length_filter(dataset, min_bound=200, max_bound=1000)
 
     # NER dataset and save result.
-    NER_dataset(dataset, 'temp_v2.3')
+    # NER_dataset(dataset, 'temp_v2.3')
 
     # Replace tag preprocess.
     tag_dict = [
@@ -530,12 +538,16 @@ def main():
         {'type': ['LOC', 'GPE'], 'tag': 'loc', 'NeedID': True},
         {'type': ['PERSON'], 'tag': 'per', 'NeedID': True}
     ]
-    dataset = ner_tag_subs(dataset, tag_dict, 'temp_v2.3')
-    dataset = date_filter(dataset, 'temp_v2.3')
+    dataset = ner_tag_subs(
+        dataset,
+        tag_dict=tag_dict,
+        NER_result_dir='v2.3result'
+    )
+    dataset = date_filter(dataset, NER_result_dir='v2.3result')
     dataset = language_filter(dataset)
     dataset = guillemet_filter(dataset)
     dataset = number_filter(dataset)
-    print(dataset)
+    save_in_db(db_name='news_GPE_v2.4.1.db', data=dataset)
 
 
 if __name__ == '__main__':
