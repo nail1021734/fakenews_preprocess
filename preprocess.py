@@ -298,18 +298,8 @@ def language_filter(dataset):
         last_type = None
         while index < len(context):
             if context[index] == '<':
-                if context[index+1:index+4] == 'org':
-                    index += 6
-                    continue
-                if context[index+1:index+4] == 'per':
-                    index += 6
-                    continue
-                if context[index+1:index+4] == 'loc':
-                    index += 6
-                    continue
-                if context[index+1:index+4] == 'num':
-                    index += 5
-                    continue
+                index = context.find('>', index) + 1
+                continue
             try:
                 char_type = unicodedata.name(context[index]).split(' ')[0]
             except:
@@ -535,8 +525,9 @@ def main():
     # Replace tag preprocess.
     tag_dict = [
         {'type': ['ORG'], 'tag': 'org', 'NeedID': True},
-        {'type': ['LOC', 'GPE'], 'tag': 'loc', 'NeedID': True},
-        {'type': ['PERSON'], 'tag': 'per', 'NeedID': True}
+        {'type': ['LOC'], 'tag': 'loc', 'NeedID': True},
+        {'type': ['PERSON'], 'tag': 'per', 'NeedID': True},
+        {'type': ['FAC'], 'tag': 'fac', 'NeedID': True}
     ]
     dataset = ner_tag_subs(
         dataset,
@@ -547,7 +538,7 @@ def main():
     dataset = language_filter(dataset)
     dataset = guillemet_filter(dataset)
     dataset = number_filter(dataset)
-    save_in_db(db_name='news_GPE_v2.4.1.db', data=dataset)
+    save_in_db(db_name='news_FAC_v2.4.2.db', data=dataset)
 
 
 if __name__ == '__main__':
